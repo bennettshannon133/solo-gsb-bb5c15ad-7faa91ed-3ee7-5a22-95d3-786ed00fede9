@@ -44,6 +44,17 @@
         <h2 class="section-title">📦 各批最终过敏原</h2>
         <div id="batch-results" class="card-grid"></div>
 
+        <h2 class="section-title">🏷️ 批次包装标签核对（依据每次最新推演自动核对）</h2>
+        <p class="hint">
+          以各批在「📦 批次录入」保存的<b>包装标签声明</b>，对照本次最新推演的<b>最终过敏原</b>逐批核对：
+          <span class="tag tag-danger">标签漏报</span> 最终含有但标签未声明；
+          <span class="tag tag-extra">标签多报</span> 标签声明了但最终不含；
+          <span class="tag tag-ok">一致</span> 声明与最终集合相同。
+          漏报项若来自<b>交叉污染</b>，展示其<b>首次继承的设备与时间</b>及可逐级展开的来源链；<b>配方自带</b>项标明来自本批配方。
+          上游批次或清洗记录改动后核对自动更新，无需重新保存标签；<b>尚未填写</b>标签声明的批次单独标出、不参与判定。
+        </p>
+        <div id="label-checks" class="label-check-list"></div>
+
         <h2 class="section-title">🗓️ 批次改期影响预览（只读试算，不会改动任何记录）</h2>
         <div class="form-card plan-card">
           <p class="hint">
@@ -129,6 +140,19 @@
             <div class="custom-row">
               <input type="text" id="batch-custom" maxlength="50" placeholder="自定义过敏原名称（可选）" />
               <button type="button" class="btn btn-small" id="batch-custom-add">＋ 添加</button>
+            </div>
+          </div>
+
+          <div class="field label-field">
+            <div class="field-label-row">
+              <span class="field-label">🏷️ 包装标签声明的过敏原（与配方分开填写，用于标签核对）</span>
+              <label class="label-switch"><input type="checkbox" id="batch-label-filled" /> 已填写标签声明</label>
+            </div>
+            <p class="hint">勾选「已填写」后选择本批包装标签上声明的过敏原，<b>一个都不勾选即表示声明为空集合（标签声明不含任何过敏原）</b>；不勾选则表示该批标签<b>尚未填写</b>，不参与漏报 / 多报核对。核对在「📊 推演结果」页依据每次最新的最终过敏原自动完成，无需重复保存。</p>
+            <div id="batch-label-allergens" class="chips-picker"></div>
+            <div class="custom-row">
+              <input type="text" id="batch-label-custom" maxlength="50" placeholder="自定义过敏原名称（可选）" />
+              <button type="button" class="btn btn-small" id="batch-label-custom-add">＋ 添加</button>
             </div>
           </div>
 

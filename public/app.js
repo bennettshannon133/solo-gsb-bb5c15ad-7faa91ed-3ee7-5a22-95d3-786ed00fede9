@@ -110,6 +110,9 @@ function renderChips(container, known, selected, extras, onChange) {
 const batchUI = {
   selected: new Set(),
   extras: [],
+  labelFilled: false,
+  labelSelected: new Set(),
+  labelExtras: [],
   steps: [],
 };
 
@@ -119,6 +122,9 @@ function resetBatchForm() {
   $('#batch-time').value = nowInput();
   batchUI.selected = new Set();
   batchUI.extras = [];
+  batchUI.labelFilled = false;
+  batchUI.labelSelected = new Set();
+  batchUI.labelExtras = [];
   batchUI.steps = [];
   $('#batch-form-title').textContent = '新增批次';
   $('#batch-save').textContent = '保存批次';
@@ -127,7 +133,18 @@ function resetBatchForm() {
 
 function renderBatchFormParts() {
   renderChips($('#batch-allergens'), state.knownAllergens, batchUI.selected, batchUI.extras);
+  renderLabelDecl();
   renderSteps();
+}
+
+/** 渲染包装标签声明区：勾选「已填写」后 chips 才可操作，空勾选即声明空集合。 */
+function renderLabelDecl() {
+  $('#batch-label-filled').checked = batchUI.labelFilled;
+  const box = $('#batch-label-allergens');
+  box.classList.toggle('picker-disabled', !batchUI.labelFilled);
+  $('#batch-label-custom').disabled = !batchUI.labelFilled;
+  $('#batch-label-custom-add').disabled = !batchUI.labelFilled;
+  renderChips(box, state.knownAllergens, batchUI.labelSelected, batchUI.labelExtras);
 }
 
 function renderSteps() {
@@ -199,6 +216,30 @@ $('#batch-custom-add').addEventListener('click', () => {
   renderBatchFormParts();
 });
 
+$('#batch-label-filled').addEventListener('change', (e) => {
+  batchUI.labelFilled = e.target.checked;
+  if (!batchUI.labelFilled) {
+    // 切回「尚未填写」时清空本地选择，再次勾选时从空声明开始。
+    batchUI.labelSelected = new Set();
+    batchUI.labelExtras = [];
+  }
+  renderLabelDecl();
+});
+
+$('#batch-label-custom-add').addEventListener('click', () => {
+  const inp = $('#batch-label-custom');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (state.knownAllergens.includes(name) || batchUI.labelExtras.includes(name)) {
+    batchUI.labelSelected.add(name);
+  } else {
+    batchUI.labelExtras.push(name);
+    batchUI.labelSelected.add(name);
+  }
+  inp.value = '';
+  renderLabelDecl();
+});
+
 $('#batch-cancel').addEventListener('click', resetBatchForm);
 
 $('#batch-form').addEventListener('submit', (e) => {
@@ -208,6 +249,8 @@ $('#batch-form').addEventListener('submit', (e) => {
       name: $('#batch-name').value,
       time: $('#batch-time').value,
       allergens: [...batchUI.selected],
+      labelFilled: batchUI.labelFilled,
+      labelAllergens: batchUI.labelFilled ? [...batchUI.labelSelected] : [],
       steps: batchUI.steps.map((s) => ({
         equipmentId: s.equipmentId,
         time: s.time || null,
@@ -230,6 +273,9 @@ function editBatch(id) {
   $('#batch-time').value = b.time;
   batchUI.selected = new Set(b.allergens);
   batchUI.extras = [];
+  batchUI.labelFilled = b.labelFilled === true;
+  batchUI.labelSelected = new Set(batchUI.labelFilled ? (b.labelAllergens || []) : []);
+  batchUI.labelExtras = [];
   batchUI.steps = b.steps.map((s) => ({ ...s, time: s.time || '' }));
   $('#batch-form-title').textContent = `编辑批次：${b.name}`;
   $('#batch-save').textContent = '保存修改';
@@ -259,12 +305,19 @@ function renderBatchList() {
     const steps = b.steps.map((s, i) =>
       `<b>${i + 1}. ${esc(eqName(s.equipmentId))}</b>${s.time ? `（${fmtTime(s.time)}）` : '（默认批次时间）'}${s.note ? ` ${esc(s.note)}` : ''}`
     ).join(' → ');
+    const labelLine = b.labelFilled
+      ? `🏷️ 标签声明：${
+          (b.labelAllergens || []).map((a) => `<span class="tag tag-extra-soft">${esc(a)}</span>`).join('')
+          || '<span class="tag tag-muted">空集合（声明不含任何过敏原）</span>'
+        }`
+      : '🏷️ 标签声明：<span class="tag tag-muted">尚未填写</span>';
     return `<div class="record">
       <div class="record-main">
         <div class="record-title">${esc(b.name)}</div>
         <div class="record-meta">${fmtTime(b.time)} · 配方：${
           b.allergens.map((a) => `<span class="tag tag-recipe">${esc(a)}</span>`).join('') || '无'
         }</div>
+        <div class="record-meta">${labelLine}</div>
         <div class="step-line">${steps}</div>
       </div>
       <div class="record-actions">
@@ -940,7 +993,7 @@ function renderBatchResults() {
   }
   wrap.innerHTML = state.trace.batches.map((b) => `
     <div class="result-card">
-      <h3>📦 ${esc(b.name)}</h3>
+      <h3>📦 ${esc(b.name)} ${labelBadge(b.labelCheck)}</h3>
       <div class="card-time">${fmtTime(b.time)}</div>
       <div class="result-section">
         <span class="lbl">配方自带：</span>${
@@ -970,6 +1023,95 @@ function renderBatchResults() {
     </div>`).join('');
 }
 
+/* ================= 包装标签核对 ================= */
+
+function labelBadge(lc) {
+  if (!lc) return '';
+  if (lc.status === 'unfilled') return '<span class="tag tag-muted label-badge">🏷️ 标签未填写</span>';
+  if (lc.status === 'consistent') return '<span class="tag tag-ok label-badge">✅ 标签一致</span>';
+  const parts = [];
+  if (lc.missingAllergens.length) parts.push(`漏报 ${lc.missingAllergens.length}`);
+  if (lc.extraAllergens.length) parts.push(`多报 ${lc.extraAllergens.length}`);
+  return `<span class="tag tag-danger label-badge">⚠️ ${parts.join(' · ')}</span>`;
+}
+
+/** 单个漏报项：交叉污染项给首次继承设备/时间 + 可展开来源链；配方项标明来自本批配方。 */
+function missingDetailHtml(d) {
+  const tag = `<span class="tag tag-danger">${esc(d.allergen)}</span>`;
+  if (d.origin === 'recipe') {
+    return `<li>${tag} <span class="tag tag-recipe">来自本批配方</span>
+      <details class="source-details" style="display:inline-block">
+        <summary><span class="kv-label">查看来源</span></summary>${treeHtml(d.sourceNodeIds)}
+      </details></li>`;
+  }
+  return `<li>${tag}
+    <span class="cross-first">↘ 首次继承自「${esc(d.equipmentName)}」· 第 ${d.stepIndex + 1} 步 · ${fmtTime(d.time)}</span>
+    <details class="source-details" style="display:inline-block">
+      <summary><span class="kv-label">展开来源链</span></summary>${treeHtml(d.sourceNodeIds)}
+    </details></li>`;
+}
+
+function renderLabelChecks() {
+  const wrap = $('#label-checks');
+  if (!state.trace.batches.length) {
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.innerHTML = state.trace.batches.map((b) => {
+    const lc = b.labelCheck;
+    if (lc.status === 'unfilled') {
+      return `<div class="label-card lc-unfilled">
+        <div class="lc-head">
+          <span class="lc-name">🏷️ ${esc(b.name)}</span>
+          ${labelBadge(lc)}
+        </div>
+        <div class="hint">该批尚未填写包装标签声明。到「📦 批次录入」编辑该批并勾选「已填写标签声明」后，即按最新推演自动核对。</div>
+      </div>`;
+    }
+
+    const declaredTags = lc.declaredAllergens.length
+      ? lc.declaredAllergens.map((a) => `<span class="tag ${lc.extraAllergens.includes(a) ? 'tag-extra' : 'tag-extra-soft'}">${esc(a)}</span>`).join('')
+      : '<span class="tag tag-muted">空集合（声明不含任何过敏原）</span>';
+    const finalTags = b.finalAllergens.length
+      ? b.finalAllergens.map((a) =>
+          `<span class="tag ${b.recipeAllergens.includes(a) ? 'tag-recipe' : 'tag-inherit'}">${esc(a)}</span>`).join('')
+      : '<span class="tag tag-muted">无过敏原</span>';
+
+    const missingBlock = lc.missingAllergens.length
+      ? `<div class="lc-block">
+          <div class="lc-block-title"><span class="tag tag-danger">标签漏报 ${lc.missingAllergens.length} 项</span>
+            <span class="hint">最终含有但标签未声明：</span></div>
+          <ul class="lc-missing">${lc.details.map(missingDetailHtml).join('')}</ul>
+        </div>`
+      : '';
+    const extraBlock = lc.extraAllergens.length
+      ? `<div class="lc-block">
+          <div class="lc-block-title"><span class="tag tag-extra">标签多报 ${lc.extraAllergens.length} 项</span>
+            <span class="hint">标签声明了但本次最新推演最终不含：</span></div>
+          <div>${lc.extraAllergens.map((a) => `<span class="tag tag-extra">${esc(a)}</span>`).join('')}</div>
+        </div>`
+      : '';
+    const consistentBlock = lc.status === 'consistent'
+      ? '<div class="lc-block"><span class="tag tag-ok">✅ 一致</span><span class="hint"> 标签声明与最终过敏原集合完全相同。</span></div>'
+      : '';
+
+    const cls = lc.status === 'consistent' ? 'label-card lc-ok' : 'label-card lc-mismatch';
+    return `<div class="${cls}">
+      <div class="lc-head">
+        <span class="lc-name">🏷️ ${esc(b.name)}<span class="lc-time">${fmtTime(b.time)}</span></span>
+        ${labelBadge(lc)}
+      </div>
+      <div class="lc-sets">
+        <div><span class="lbl">标签声明：</span>${declaredTags}</div>
+        <div><span class="lbl">最终过敏原：</span>${finalTags}</div>
+      </div>
+      ${missingBlock}
+      ${extraBlock}
+      ${consistentBlock}
+    </div>`;
+  }).join('');
+}
+
 function renderEquipmentResults() {
   const wrap = $('#equipment-results');
   if (!state.trace.equipment.length) {
@@ -991,6 +1133,7 @@ function renderResults() {
   if (empty) return;
   renderTimeline();
   renderBatchResults();
+  renderLabelChecks();
   renderEquipmentResults();
 }
 
@@ -1012,6 +1155,7 @@ function renderAll() {
   renderEquipmentList();
   // 表单中的 chips / 设备下拉同步刷新（保留当前勾选）
   renderChips($('#batch-allergens'), state.knownAllergens, batchUI.selected, batchUI.extras);
+  renderLabelDecl();
   renderSteps();
   renderCleaningFormParts();
   // 清洗规划区同步刷新；记录变更后上次规划结果自动失效

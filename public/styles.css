@@ -210,6 +210,51 @@ input:focus, select:focus { outline: 2px solid #bfdbfe; border-color: var(--prim
 .tag-clean { background: var(--clean-bg); color: var(--clean); }
 .tag-muted { background: var(--chip-bg); color: var(--muted); }
 .tag-danger { background: #fee2e2; color: var(--danger); }
+.tag-ok { background: #dcfce7; color: #15803d; font-weight: 600; }
+.tag-extra { background: #ffedd5; color: #c2410c; font-weight: 600; }
+.tag-extra-soft { background: #fff7ed; color: #9a3412; }
+
+/* ---------- 包装标签声明 / 核对 ---------- */
+.label-switch {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 6px !important;
+  font-size: 13px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.label-switch input { width: auto; }
+.picker-disabled { opacity: 0.45; pointer-events: none; }
+.label-badge { font-size: 11px; vertical-align: middle; }
+
+.label-check-list { display: flex; flex-direction: column; gap: 10px; }
+.label-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--muted);
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: var(--shadow);
+}
+.label-card.lc-ok { border-left-color: #16a34a; }
+.label-card.lc-mismatch { border-left-color: var(--danger); }
+.label-card.lc-unfilled { border-left-color: #9ca3af; background: #fafbfc; }
+.lc-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.lc-name { font-weight: 600; }
+.lc-time { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 8px; }
+.lc-sets { margin-top: 8px; font-size: 12.5px; display: flex; flex-direction: column; gap: 4px; }
+.lc-sets .lbl { color: var(--muted); margin-right: 4px; }
+.lc-block { margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--border); }
+.lc-block-title { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 4px; }
+.lc-missing { margin: 4px 0 0; padding-left: 0; list-style: none; }
+.lc-missing li { padding: 3px 0; font-size: 12.5px; }
+.cross-first { color: var(--inherit); font-size: 12px; margin-left: 4px; }
 
 /* ---------- 结果卡片 ---------- */
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }

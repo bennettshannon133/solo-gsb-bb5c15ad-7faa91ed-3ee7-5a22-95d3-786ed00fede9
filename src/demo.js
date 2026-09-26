@@ -8,6 +8,12 @@
  *   08:30 搅拌缸清洗移除「鸡蛋」（当时并无鸡蛋，故无效）；
  *   10:30 搅拌缸清洗移除「小麦」，残留清空；
  *   批次C（含乳）11:00 使用烤箱 → 继承小麦（来自批次B的留渍）。
+ *
+ * 包装标签声明（演示三种核对结果）：
+ *   A 批声明「小麦」—— 与最终过敏原一致；
+ *   B 批只声明「鸡蛋」—— 漏报交叉污染继承到的「小麦（含麸质）」；
+ *   C 批声明「乳（含乳糖）、花生」—— 漏报「小麦（含麸质）」，
+ *   同时多报最终不含的「花生」。
  */
 
 function buildDemoData(prefixId) {
@@ -27,6 +33,9 @@ function buildDemoData(prefixId) {
       name: 'A批-全麦面团',
       time: '2026-09-25T08:00',
       allergens: ['小麦（含麸质）'],
+      // 标签声明与最终过敏原一致。
+      labelFilled: true,
+      labelAllergens: ['小麦（含麸质）'],
       steps: [
         { equipmentId: eq.mixer, time: '2026-09-25T08:00', note: '和面 15 分钟' },
         { equipmentId: eq.oven, time: '2026-09-25T08:30', note: '' },
@@ -37,6 +46,9 @@ function buildDemoData(prefixId) {
       name: 'B批-蛋香糕点',
       time: '2026-09-25T09:00',
       allergens: ['鸡蛋'],
+      // 只声明了配方自带的鸡蛋，漏报从搅拌缸交叉污染继承到的小麦。
+      labelFilled: true,
+      labelAllergens: ['鸡蛋'],
       steps: [
         { equipmentId: eq.mixer, time: '2026-09-25T09:00', note: '打蛋糊' },
         { equipmentId: eq.oven, time: '2026-09-25T09:30', note: '' },
@@ -48,6 +60,10 @@ function buildDemoData(prefixId) {
       name: 'C批-奶香布丁',
       time: '2026-09-25T11:00',
       allergens: ['乳（含乳糖）'],
+      // 漏报从烤箱继承到的小麦（同时还会继承 B 批留在烤箱的鸡蛋），
+      // 多报了最终并不含的花生。
+      labelFilled: true,
+      labelAllergens: ['乳（含乳糖）', '花生'],
       steps: [
         { equipmentId: eq.oven, time: '2026-09-25T11:00', note: '蒸烤' },
         { equipmentId: eq.filler, time: '2026-09-25T11:30', note: '' },
