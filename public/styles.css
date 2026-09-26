@@ -210,6 +210,18 @@ input:focus, select:focus { outline: 2px solid #bfdbfe; border-color: var(--prim
 .tag-clean { background: var(--clean-bg); color: var(--clean); }
 .tag-muted { background: var(--chip-bg); color: var(--muted); }
 .tag-danger { background: #fee2e2; color: var(--danger); }
+.tag-warn { background: #fef3c7; color: var(--warning); }
+.tag-label { background: #dbeafe; color: #1e40af; }
+
+/* ---------- 包装标签核对 ---------- */
+.label-status { display: flex; gap: 18px; margin-bottom: 8px; }
+.radio-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--text); cursor: pointer;
+}
+.label-miss-list { margin: 4px 0 0; padding-left: 0; list-style: none; }
+.label-miss-list li { padding: 3px 0; }
+.label-first { color: var(--muted); font-size: 11.5px; margin: 2px 0; }
 
 /* ---------- 结果卡片 ---------- */
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 12px; }

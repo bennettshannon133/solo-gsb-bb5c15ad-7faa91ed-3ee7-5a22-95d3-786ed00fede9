@@ -44,6 +44,13 @@
         <h2 class="section-title">📦 各批最终过敏原</h2>
         <div id="batch-results" class="card-grid"></div>
 
+        <h2 class="section-title">🏷️ 包装标签核对（按最新推演结果逐批核对）</h2>
+        <p class="hint">以当前最新推演得到的各批<b>最终过敏原</b>为准，与批次录入时保存的<b>标签声明</b>逐批对比，分别标出
+          <b>漏报</b>（最终含有但标签未声明）、<b>多报</b>（标签已声明但最终不含）与<b>一致</b>项；
+          漏报若来自交叉污染，可查看首次继承的设备、时间并逐级展开来源链。
+          上游批次或清洗记录变动后，核对结果随推演自动更新，无需重新保存标签。</p>
+        <div id="label-check"></div>
+
         <h2 class="section-title">🗓️ 批次改期影响预览（只读试算，不会改动任何记录）</h2>
         <div class="form-card plan-card">
           <p class="hint">
@@ -129,6 +136,22 @@
             <div class="custom-row">
               <input type="text" id="batch-custom" maxlength="50" placeholder="自定义过敏原名称（可选）" />
               <button type="button" class="btn btn-small" id="batch-custom-add">＋ 添加</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="field-label">包装标签声明的过敏原（用于「推演结果」页的标签核对）</span>
+            <div class="label-status">
+              <label class="radio-label"><input type="radio" name="label-status" value="unfilled" checked /> 尚未填写</label>
+              <label class="radio-label"><input type="radio" name="label-status" value="filled" /> 已填写标签声明</label>
+            </div>
+            <div id="label-editor" class="hidden">
+              <div id="label-allergens" class="chips-picker"></div>
+              <div class="custom-row">
+                <input type="text" id="label-custom" maxlength="50" placeholder="自定义过敏原名称（可选）" />
+                <button type="button" class="btn btn-small" id="label-custom-add">＋ 添加</button>
+              </div>
+              <p class="hint">已填写但一种都不勾选 = 声明标签上不含任何过敏原（空集合），与「尚未填写」含义不同。</p>
             </div>
           </div>
 

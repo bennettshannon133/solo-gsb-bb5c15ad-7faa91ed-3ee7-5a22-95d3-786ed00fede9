@@ -8,6 +8,9 @@
  *   08:30 搅拌缸清洗移除「鸡蛋」（当时并无鸡蛋，故无效）；
  *   10:30 搅拌缸清洗移除「小麦」，残留清空；
  *   批次C（含乳）11:00 使用烤箱 → 继承小麦（来自批次B的留渍）。
+ * 标签声明示例（用于包装标签核对）：
+ *   批次A 声明与最终一致；批次B 漏报交叉污染继承的小麦；
+ *   批次C 漏报小麦且多报芝麻。
  */
 
 function buildDemoData(prefixId) {
@@ -27,6 +30,7 @@ function buildDemoData(prefixId) {
       name: 'A批-全麦面团',
       time: '2026-09-25T08:00',
       allergens: ['小麦（含麸质）'],
+      labelAllergens: ['小麦（含麸质）'],
       steps: [
         { equipmentId: eq.mixer, time: '2026-09-25T08:00', note: '和面 15 分钟' },
         { equipmentId: eq.oven, time: '2026-09-25T08:30', note: '' },
@@ -37,6 +41,7 @@ function buildDemoData(prefixId) {
       name: 'B批-蛋香糕点',
       time: '2026-09-25T09:00',
       allergens: ['鸡蛋'],
+      labelAllergens: ['鸡蛋'],
       steps: [
         { equipmentId: eq.mixer, time: '2026-09-25T09:00', note: '打蛋糊' },
         { equipmentId: eq.oven, time: '2026-09-25T09:30', note: '' },
@@ -48,6 +53,7 @@ function buildDemoData(prefixId) {
       name: 'C批-奶香布丁',
       time: '2026-09-25T11:00',
       allergens: ['乳（含乳糖）'],
+      labelAllergens: ['乳（含乳糖）', '芝麻'],
       steps: [
         { equipmentId: eq.oven, time: '2026-09-25T11:00', note: '蒸烤' },
         { equipmentId: eq.filler, time: '2026-09-25T11:30', note: '' },

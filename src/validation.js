@@ -72,7 +72,10 @@ function knownAllergens(data) {
     (list || []).forEach((a) => {
       if (!STANDARD_ALLERGENS.includes(a)) custom.add(a);
     });
-  data.batches.forEach((b) => collect(b.allergens));
+  data.batches.forEach((b) => {
+    collect(b.allergens);
+    collect(b.labelAllergens);
+  });
   data.cleanings.forEach((c) => collect(c.allergens));
   return [...STANDARD_ALLERGENS, ...[...custom].sort((a, b) => a.localeCompare(b, 'zh-Hans-CN'))];
 }
@@ -95,6 +98,20 @@ function normalizeBatchInput(body, data, { partial = false } = {}) {
 
   if (body.allergens !== undefined || !partial) {
     patch.allergens = normalizeAllergenList(body.allergens, '配方过敏原');
+  }
+
+  // 包装标签声明：null 表示「尚未填写」，空数组表示「已填写但声明不含
+  // 任何过敏原」（空集合），两者含义不同；未传该字段时不改动已有声明。
+  if (body.labelAllergens !== undefined) {
+    if (body.labelAllergens === null) {
+      patch.labelAllergens = null;
+    } else {
+      patch.labelAllergens = normalizeAllergenList(
+        body.labelAllergens,
+        '标签声明过敏原',
+        { allowEmpty: true }
+      );
+    }
   }
 
   if (body.steps !== undefined || !partial) {

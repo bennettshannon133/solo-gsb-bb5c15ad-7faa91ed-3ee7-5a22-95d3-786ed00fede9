@@ -7,6 +7,7 @@ const { JsonStore, newId } = require('./store');
 const { trace } = require('./trace');
 const { planCleaning } = require('./planner');
 const { previewReschedule } = require('./reschedule');
+const { checkLabels } = require('./labelcheck');
 const { buildDemoData } = require('./demo');
 const {
   HttpError,
@@ -30,10 +31,14 @@ const store = new JsonStore(DATA_FILE);
 
 function buildState() {
   const data = store.read();
+  const traceResult = trace(data);
   return {
     data,
     knownAllergens: knownAllergens(data),
-    trace: trace(data),
+    trace: traceResult,
+    // 标签核对完全由最新推演结果推导：任何记录变动后随状态一起返回，
+    // 上游批次 / 清洗记录改动无需重新保存标签即可得到更新后的核对结果。
+    labelCheck: checkLabels(data, traceResult),
   };
 }
 
@@ -111,7 +116,8 @@ app.post('/api/batches', async (req, res, next) => {
   try {
     await store.mutate((d) => {
       const patch = normalizeBatchInput(req.body || {}, d);
-      d.batches.push({ id: newId('b'), ...patch });
+      // 未提交标签声明时默认「尚未填写」（null），与空集合声明区分。
+      d.batches.push({ id: newId('b'), labelAllergens: null, ...patch });
     });
     res.status(201).json(buildState());
   } catch (err) {
